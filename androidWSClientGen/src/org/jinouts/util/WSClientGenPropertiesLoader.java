@@ -27,7 +27,7 @@ public class WSClientGenPropertiesLoader
 			
 			System.out.println ("Properties: "+wsClientGenCommand  );
 			
-			AndroidWSClientGenProp.wsClientGenCommand = wsClientGenCommand;
+			//AndroidWSClientGenProp.wsClientGenCommand = wsClientGenCommand;
 			
 			
 		}
