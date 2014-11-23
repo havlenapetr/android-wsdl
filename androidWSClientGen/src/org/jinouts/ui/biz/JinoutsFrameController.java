@@ -44,26 +44,26 @@ public class JinoutsFrameController {
         return dir;
     }
 
-    public File generateJavaFromWSDL(File cxfBinFile, File destDir, String wsdlUrl) {
+    public File generateJavaFromWSDL(File cxfBinFile, File dstDir, String wsdlUrl) {
         try {
             File jaxbBindingFile = new File(AndroidWSClientGenProp.jaxbBindingPath);
             File tempDir = createDir(AndroidWSClientGenProp.tempDirPath);
-            destDir = createDir(new File(destDir, AndroidWSClientGenProp.wsClientStub));
+            dstDir = createDir(new File(dstDir, AndroidWSClientGenProp.wsClientStub));
 
             runWsdlToJava(cxfBinFile, jaxbBindingFile, tempDir, wsdlUrl);
 
             // now modified the cxf generated file
-            CXFToJinoutsWSConverter.modifyImportOfFile(tempDir, destDir);
+            CXFToJinoutsWSConverter.modifyImportOfFile(tempDir, dstDir);
 
             File libDir = new File(AndroidWSClientGenProp.libDirPath);
             // now copy the library to the dist dir
-            FileUtils.copyDirectoryToDirectory(libDir, destDir);
+            FileUtils.copyDirectoryToDirectory(libDir, dstDir);
 
             if (AndroidWSClientGenProp.deleteTemp) {
                 // now delete the temp file
                 FileUtils.cleanDirectory(tempDir);
             }
-            return destDir;
+            return dstDir;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
