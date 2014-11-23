@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.wsdl.Definition;
+import javax.wsdl.WSDLException;
 import javax.wsdl.factory.WSDLFactory;
 import javax.wsdl.xml.WSDLReader;
 
@@ -35,24 +36,24 @@ import org.jinouts.xml.ws.ResponseWrapper;
 import com.eviware.soapui.impl.wsdl.support.soap.SoapVersion;
 
 /**
- * @author asraf
- *         asraf344@gmail.com
+ * @author asraf <asraf344@gmail.com>
+ * @author Petr Havlena <havlenapetr@gmail.com>
  */
 public class WSInvocationHandler implements InvocationHandler {
 
     private final URL wsdlLocation;
     private final QName serviceName;
+    private final AtomicReference<Definition> definitionRef;
 
     public WSInvocationHandler(URL wsdlLocation, QName serviceName) {
         this.wsdlLocation = wsdlLocation;
         this.serviceName = serviceName;
+        this.definitionRef = new AtomicReference<Definition>();
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        WSDLFactory wsdlFactory = WSDLFactory.newInstance();
-        WSDLReader wsdlReader = wsdlFactory.newWSDLReader();
-        Definition definition = wsdlReader.readWSDL(wsdlLocation.toString());
+        Definition definition = getSoapDefinition();
 
         String appNameSpace = JinosWSUtil.getNameSpaceFromDefinition(definition);
 
@@ -73,6 +74,21 @@ public class WSInvocationHandler implements InvocationHandler {
 
         //Object responseObj = ReflectionHelper.invokeGetter ( obj, wrapperResultName );
         return XMLReflectionUtil.invokeGetter(obj, wrapperResultName);
+    }
+
+    private Definition getSoapDefinition() throws WSDLException {
+        Definition localDefinition = definitionRef.get();
+        if (localDefinition == null) {
+            synchronized (this) {
+                localDefinition = definitionRef.get();
+                if (localDefinition == null) {
+                    WSDLReader wsdlReader = WSDLFactory.newInstance().newWSDLReader();
+                    localDefinition = wsdlReader.readWSDL(wsdlLocation.toString());
+                    definitionRef.set(localDefinition);
+                }
+            }
+        }
+        return localDefinition;
     }
 
     private Class getResponseClassForAnnotation(Annotation annotation) throws ClassNotFoundException {
