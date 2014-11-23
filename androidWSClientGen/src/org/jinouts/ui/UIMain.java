@@ -3,7 +3,8 @@
  */
 package org.jinouts.ui;
 
-import org.jinouts.util.WSClientGenPropertiesLoader;
+import java.io.FileInputStream;
+import java.util.Properties;
 
 /**
  * @author asraf
@@ -17,7 +18,7 @@ public class UIMain {
      */
     public static void main(String[] args) {
         // Load the properties
-        WSClientGenPropertiesLoader.loadProperties();
+        loadProperties();
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -25,7 +26,19 @@ public class UIMain {
                 frame.setVisible(true);
             }
         });
+    }
 
+    private static void loadProperties() {
+        Properties properties = new Properties();
+        try {
+            // load properties
+            properties.load(new FileInputStream("conf/andWSClientGen.properties"));
+
+            // now get the properties
+            //AndroidWSClientGenProp.wsClientGenCommand = (String) properties.get("cxf.ws.Client.Command");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
