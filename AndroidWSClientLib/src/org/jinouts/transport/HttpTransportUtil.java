@@ -13,6 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
@@ -22,14 +23,14 @@ public final class HttpTransportUtil {
     private HttpTransportUtil() {
     }
 
-    public static String sendRequestAndGetRespXML(String reqXMLString, String url) throws IOException {
+    public static String sendRequestAndGetRespXML(String soapAction, String reqXMLString, String url) throws IOException {
         HttpPost post = new HttpPost(url);
-        StringEntity body = new StringEntity(reqXMLString, "UTF-8");
+        StringEntity body = new StringEntity(reqXMLString, HTTP.UTF_8);
         body.setChunked(true);
         post.setEntity(body);
-        post.setHeader("Content-type", "text/xml; charset=UTF-8");
-        post.setHeader("Accept", "text/xml; charset=UTF-8");
-        //post.setHeader("SOAPAction", operation);
+        post.setHeader("Content-Type", "text/xml;charset=" + HTTP.UTF_8);
+        post.setHeader("Accept-Encoding", "gzip,deflate");
+        post.setHeader("SOAPAction", soapAction);
 
         HttpParams httpParameters = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
@@ -37,9 +38,9 @@ public final class HttpTransportUtil {
 
         HttpResponse response = new DefaultHttpClient(httpParameters).execute(post);
         int status = response.getStatusLine().getStatusCode();
-        if (status != 200) {
+        if (status != 200 || response.getEntity() == null) {
             throw new HttpResponseException(status, "Invalid response");
         }
-        return EntityUtils.toString(response.getEntity());
+        return EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
     }
 }

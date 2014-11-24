@@ -43,22 +43,17 @@ public class JinosWSUtil {
 
     public static SoapVersion getVersionForWSDL(Definition definition, String bindingName) throws Exception {
         // Steps :
-        //1.  Get the definition
-        // 2 detect the version from here
-        //3.Get the soap builder
-        //4. build the message
-
-        //System.out.println ("def Namespace: " + definition.getNamespaces ( ) );
+        //1. Get the definition
+        //2. Detect the version from here
+        //3. Get the soap builder
+        //4. Build the message
 
         Binding binding = getBindingOperation(definition, bindingName);
-
         if (binding != null) {
             if (canImportSoap11(binding)) {
                 return SoapVersion.Soap11;
             }
-
         }
-
         return SoapVersion.Soap12;
     }
 

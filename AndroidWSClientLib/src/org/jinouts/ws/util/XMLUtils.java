@@ -278,7 +278,9 @@ public class XMLUtils {
         StringBuilder sb = new StringBuilder();
         sb.append(XMLConstants.SOAP_ENVELOPE_START_TAG);
         sb.append(XMLConstants.SOAP_ENV_NS_TAG);
-        sb.append("=\"" + soapVersion.getEnvelopeNamespace() + "\" ");
+        //TODO: fix this
+        //sb.append("=\"" + soapVersion.getEnvelopeNamespace() + "\" ");
+        sb.append("=\"" + "http://schemas.xmlsoap.org/soap/envelope/" + "\" ");
         sb.append(XMLConstants.APP_NS_TAG);
         sb.append("=\"" + appNameSpace + "\" >");
 

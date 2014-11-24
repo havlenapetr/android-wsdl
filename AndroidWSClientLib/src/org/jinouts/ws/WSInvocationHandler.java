@@ -46,6 +46,9 @@ public class WSInvocationHandler implements InvocationHandler {
     private final AtomicReference<Definition> definitionRef;
 
     public WSInvocationHandler(URL wsdlLocation, QName serviceName) {
+        if (wsdlLocation == null) {
+            throw new IllegalArgumentException();
+        }
         this.wsdlLocation = wsdlLocation;
         this.serviceName = serviceName;
         this.definitionRef = new AtomicReference<Definition>();
@@ -67,7 +70,9 @@ public class WSInvocationHandler implements InvocationHandler {
         String wrapperResultName = getWrapperResultName(respClazz);
 
         // now Get the response
-        String responseXML = HttpTransportUtil.sendRequestAndGetRespXML(requestXML, wsdlLocation.toString());
+        String responseXML = HttpTransportUtil.sendRequestAndGetRespXML(
+                getSoapActionWithNameSpace(appNameSpace, method), requestXML, wsdlLocation.toString());
+
         GenericHandler genericHandler = new GenericHandler(wrapperResultName, respClazz, "android");
         genericHandler.parseWithPullParser(responseXML);
         Object obj = genericHandler.getObject();
@@ -97,6 +102,11 @@ public class WSInvocationHandler implements InvocationHandler {
         }
         ResponseWrapper respWrapper = (ResponseWrapper) annotation;
         return Class.forName(respWrapper.className());
+    }
+
+    private String getSoapActionWithNameSpace(String appNameSpace, Method method) {
+        String soapOperation = getWSOperationNameFromMethod(method);
+        return String.format("%s/%s", appNameSpace, soapOperation);
     }
 
     private Class getResponseClassForMethod(Method method) throws ClassNotFoundException {
