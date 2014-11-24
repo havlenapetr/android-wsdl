@@ -29,7 +29,7 @@ public final class HttpTransportUtil {
         body.setChunked(true);
         post.setEntity(body);
         post.setHeader("Content-Type", "text/xml;charset=" + HTTP.UTF_8);
-        post.setHeader("Accept-Encoding", "gzip,deflate");
+        post.setHeader("Accept-Charset", HTTP.UTF_8);
         post.setHeader("SOAPAction", soapAction);
 
         HttpParams httpParameters = new BasicHttpParams();

@@ -287,4 +287,19 @@ public class XMLUtils {
         return sb.toString();
     }
 
+    public static String filterOutSoapHeader(String xml) {
+        int start = xml.indexOf("<soap:Header>");
+        if (start < 0) {
+            return xml;
+        }
+
+        int end = xml.indexOf("</soap:Header>");
+        if (end < 0) {
+            throw new IllegalArgumentException("Close tag for SOAP header not presented");
+        }
+
+        String part1 = xml.substring(0, start);
+        String part2 = xml.substring(end + "</soap:Header>".length());
+        return part1 + part2;
+    }
 }

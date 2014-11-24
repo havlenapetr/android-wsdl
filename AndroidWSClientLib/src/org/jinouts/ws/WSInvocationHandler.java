@@ -74,7 +74,7 @@ public class WSInvocationHandler implements InvocationHandler {
                 getSoapActionWithNameSpace(appNameSpace, method), requestXML, wsdlLocation.toString());
 
         GenericHandler genericHandler = new GenericHandler(wrapperResultName, respClazz, "android");
-        genericHandler.parseWithPullParser(responseXML);
+        genericHandler.parseWithPullParser(XMLUtils.filterOutSoapHeader(responseXML));
         Object obj = genericHandler.getObject();
 
         //Object responseObj = ReflectionHelper.invokeGetter ( obj, wrapperResultName );
