@@ -56,8 +56,9 @@ public class JinoutsFrameController {
             CXFToJinoutsWSConverter.modifyImportOfFile(tempDir, dstDir);
 
             File libDir = new File(AndroidWSClientGenProp.libDirPath);
-            // now copy the library to the dist dir
-            FileUtils.copyDirectoryToDirectory(libDir, dstDir);
+            if (libDir.exists()) {
+                FileUtils.copyDirectoryToDirectory(libDir, dstDir);
+            }
 
             if (AndroidWSClientGenProp.deleteTemp) {
                 // now delete the temp file

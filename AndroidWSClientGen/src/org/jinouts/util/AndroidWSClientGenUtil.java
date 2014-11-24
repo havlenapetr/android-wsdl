@@ -48,7 +48,7 @@ public class AndroidWSClientGenUtil {
 
     private static Process createAndExecuteProcess(String command) throws IOException {
         String system = System.getProperty("os.name").toLowerCase();
-        if ("unix".equals(system) || "mac os x".equals(system)) {
+        if ("unix".equals(system) || "mac os x".equals(system) || "linux".equals(system)) {
             return Runtime.getRuntime().exec(new String[] {"/bin/sh", "-c", command});
         } else if ("windows".equals(system)) {
             return Runtime.getRuntime().exec(new String[] {"cmd.exe", "/c", command});
