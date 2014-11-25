@@ -136,8 +136,6 @@ public final class ReflectionHelper {
         String lastFieldName = fieldName;
         Object parameter = value;
         String methodName = null;
-        Field field = null;
-        Class fieldClass = null;
 
         // need to calculate method name early for error reporting
         StringBuilder sb = new StringBuilder(lastFieldName.length() + 3);
@@ -164,16 +162,14 @@ public final class ReflectionHelper {
                  * If the field's class and the value's class are not equal,
                  * then need to cast or convert the value to the field's class
                  */
-                field = getFieldByName(instanceClass, lastFieldName);
-
+                Field field = getFieldByName(instanceClass, lastFieldName);
                 if (field == null) {
                     throw new FieldNotMatchedException();
                 }
 
-                fieldClass = field.getType();
                 // get the method
-                Method method = geSettertMethodByFieldName(instanceClass, lastFieldName, fieldClass);
-                if (method == null && !fieldClass.equals(List.class)) {
+                Method method = getSetterMethodByFieldName(lastFieldName, field);
+                if (method == null && !field.getType().equals(List.class)) {
                     throw new MethodNotMatchedException();
                 }
 
@@ -195,7 +191,8 @@ public final class ReflectionHelper {
 					 * return false; }
 					 */
 
-                    if (field.getType().equals(String.class)) {
+                    Class fieldClass = field.getType();
+                    if (fieldClass.equals(String.class)) {
                         parameter = stringValue;
                     }
 					/*
@@ -383,7 +380,6 @@ public final class ReflectionHelper {
             throws FieldNotMatchedException {
 
         Field field = getFieldByName(objectClass, fieldName);
-
         // if field is still null
         if (field == null) {
             String fieldNameFromXMLElm = XMLReflectionUtil.getFieldNameByXMLElement(objectClass, fieldName);
@@ -700,99 +696,30 @@ public final class ReflectionHelper {
     }
 
     public static Field getFieldByName(Class instanceClass, String fieldName) {
-        Field field = null;
-        try {
-            field = instanceClass.getDeclaredField(fieldName);
-        } catch (Exception except) {
-            System.out.println(ReflectionHelper.class.getSimpleName() + "*" + except.toString());
-        }
-
-        if (field == null) {
-
-            // if field is still null check in super class
-            Class superClass = instanceClass.getSuperclass();
-            while (superClass != null && !superClass.getName().equals("java.lang.Object")) {
-                try {
-                    field = superClass.getDeclaredField(fieldName);
-                    if (field != null) {
-                        return field;
-                    }
-                } catch (NoSuchFieldException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                superClass = superClass.getSuperclass();
-            }
-
-        }
-        if (field == null) {
+        do {
             try {
-                field = instanceClass.getDeclaredField("_" + fieldName);
+                Field field = instanceClass.getDeclaredField(fieldName);
+                if (field != null) {
+                    return field;
+                }
             } catch (NoSuchFieldException e) {
-                // TODO Auto-generated catch block
-                e.getMessage();
+                instanceClass = instanceClass.getSuperclass();
             }
+        } while (instanceClass != null && !instanceClass.getName().equals("java.lang.Object"));
 
-        }
-
-        return field;
+        return null;
     }
 
-    public static Method geSettertMethodByFieldName(Class instanceClass, String fieldName, Class fieldClass) {
-        Method setterMethod = null;
-
-        // need to calculate method name early for error reporting
+    public static Method getSetterMethodByFieldName(String fieldName, Field field) {
         StringBuilder sb = new StringBuilder(fieldName.length() + 3);
         sb.append("set");
         sb.append(fieldName);
         sb.setCharAt(3, Character.toUpperCase(sb.charAt(3)));
-        String methodName = sb.toString();
-        Method method = null;
-
         try {
-            setterMethod = instanceClass.getDeclaredMethod(methodName, fieldClass);
-
-        } catch (Exception except) {
-            System.out.println(ReflectionHelper.class.getSimpleName() + "*" + except.toString());
+            return field.getDeclaringClass().getDeclaredMethod(sb.toString(), field.getType());
+        } catch (NoSuchMethodException e) {
+            return null;
         }
-
-        if (setterMethod == null) {
-
-            // if field is still null check in super class
-            Class superClass = instanceClass.getSuperclass();
-            while (superClass != null && !superClass.getName().equals("java.lang.Object")) {
-                try {
-                    setterMethod = instanceClass.getDeclaredMethod(methodName, fieldClass);
-                    if (setterMethod != null) {
-                        return setterMethod;
-                    }
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                superClass = instanceClass.getSuperclass();
-            }
-
-        }
-        if (setterMethod == null) {
-            try {
-                methodName = "set" + fieldName;
-                setterMethod = instanceClass.getDeclaredMethod(methodName, fieldClass);
-
-
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                System.out.println(ReflectionHelper.class.getSimpleName() + "*" + e.toString());
-            }
-
-        }
-        // if setter method is still null, get the method list and pick which match
-        if (setterMethod == null) {
-            Method[] methods = instanceClass.getDeclaredMethods();
-            setterMethod = getMethodByNameFromArray(methods, methodName);
-        }
-
-        return setterMethod;
     }
 
     public static Method getMethodByNameFromArray(Method[] methods, String methodName) {
