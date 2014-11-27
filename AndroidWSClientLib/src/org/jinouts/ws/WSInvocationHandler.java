@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author asraf <asraf344@gmail.com>
@@ -37,16 +36,13 @@ class WSInvocationHandler implements InvocationHandler {
     private final URL wsdlLocation;
     private final QName serviceName;
     private final HttpTransport httpTransport;
-    private final AtomicReference<Definition> definitionRef;
+
+    private volatile Definition definition;
 
     public WSInvocationHandler(URL wsdlLocation, QName serviceName, HttpTransport httpTransport) {
-        if (wsdlLocation == null) {
-            throw new IllegalArgumentException();
-        }
         this.wsdlLocation = wsdlLocation;
         this.serviceName = serviceName;
         this.httpTransport = httpTransport;
-        this.definitionRef = new AtomicReference<Definition>();
     }
 
     @Override
@@ -77,14 +73,13 @@ class WSInvocationHandler implements InvocationHandler {
     }
 
     private Definition getSoapDefinition() throws WSDLException {
-        Definition localDefinition = definitionRef.get();
+        Definition localDefinition = definition;
         if (localDefinition == null) {
             synchronized (this) {
-                localDefinition = definitionRef.get();
+                localDefinition = definition;
                 if (localDefinition == null) {
                     WSDLReader wsdlReader = WSDLFactory.newInstance().newWSDLReader();
-                    localDefinition = wsdlReader.readWSDL(wsdlLocation.toString());
-                    definitionRef.set(localDefinition);
+                    definition = localDefinition = wsdlReader.readWSDL(wsdlLocation.toString());
                 }
             }
         }
