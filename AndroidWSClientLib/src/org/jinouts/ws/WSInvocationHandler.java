@@ -5,8 +5,20 @@
  */
 package org.jinouts.ws;
 
+import com.eviware.soapui.impl.wsdl.support.soap.SoapVersion;
 import hu.javaforum.android.androidsoap.GenericHandler;
+import org.jinouts.jws.WebMethod;
+import org.jinouts.jws.WebParam;
+import org.jinouts.transport.HttpTransport;
+import org.jinouts.ws.util.*;
+import org.jinouts.xml.namespace.QName;
+import org.jinouts.xml.ws.RequestWrapper;
+import org.jinouts.xml.ws.ResponseWrapper;
 
+import javax.wsdl.Definition;
+import javax.wsdl.WSDLException;
+import javax.wsdl.factory.WSDLFactory;
+import javax.wsdl.xml.WSDLReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -16,41 +28,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.wsdl.Definition;
-import javax.wsdl.WSDLException;
-import javax.wsdl.factory.WSDLFactory;
-import javax.wsdl.xml.WSDLReader;
-
-import org.jinouts.jws.WebMethod;
-import org.jinouts.jws.WebParam;
-import org.jinouts.transport.HttpTransportUtil;
-import org.jinouts.ws.util.JinosWSUtil;
-import org.jinouts.ws.util.WSRequestXMLUtils;
-import org.jinouts.ws.util.XMLConstants;
-import org.jinouts.ws.util.XMLReflectionUtil;
-import org.jinouts.ws.util.XMLUtils;
-import org.jinouts.xml.namespace.QName;
-import org.jinouts.xml.ws.RequestWrapper;
-import org.jinouts.xml.ws.ResponseWrapper;
-
-import com.eviware.soapui.impl.wsdl.support.soap.SoapVersion;
-
 /**
  * @author asraf <asraf344@gmail.com>
  * @author Petr Havlena <havlenapetr@gmail.com>
  */
-public class WSInvocationHandler implements InvocationHandler {
+class WSInvocationHandler implements InvocationHandler {
 
     private final URL wsdlLocation;
     private final QName serviceName;
+    private final HttpTransport httpTransport;
     private final AtomicReference<Definition> definitionRef;
 
-    public WSInvocationHandler(URL wsdlLocation, QName serviceName) {
+    public WSInvocationHandler(URL wsdlLocation, QName serviceName, HttpTransport httpTransport) {
         if (wsdlLocation == null) {
             throw new IllegalArgumentException();
         }
         this.wsdlLocation = wsdlLocation;
         this.serviceName = serviceName;
+        this.httpTransport = httpTransport;
         this.definitionRef = new AtomicReference<Definition>();
     }
 
@@ -70,7 +65,7 @@ public class WSInvocationHandler implements InvocationHandler {
         String wrapperResultName = getWrapperResultName(respClazz);
 
         // now Get the response
-        String responseXML = HttpTransportUtil.sendRequestAndGetRespXML(
+        String responseXML = httpTransport.sendRequestAndGetRespXML(
                 getSoapActionWithNameSpace(appNameSpace, method), requestXML, wsdlLocation.toString());
 
         GenericHandler genericHandler = new GenericHandler(wrapperResultName, respClazz, "android");
@@ -213,8 +208,7 @@ public class WSInvocationHandler implements InvocationHandler {
         if (webMethodAnnotation != null) {
             WebMethod webMethod = (WebMethod) webMethodAnnotation;
             operationNameFromWebMethod = webMethod.operationName();
-            if (operationNameFromWebMethod != null
-                    && !operationNameFromWebMethod.isEmpty()) {
+            if (operationNameFromWebMethod != null && !operationNameFromWebMethod.isEmpty()) {
                 operationName = operationNameFromWebMethod;
             }
         }
@@ -224,8 +218,7 @@ public class WSInvocationHandler implements InvocationHandler {
             if (reqWrapperAnnotation != null) {
                 RequestWrapper reqWrapper = (RequestWrapper) reqWrapperAnnotation;
                 operationNameFromReqWrapper = reqWrapper.localName();
-                if (operationNameFromReqWrapper != null
-                        && !operationNameFromReqWrapper.isEmpty()) {
+                if (operationNameFromReqWrapper != null && !operationNameFromReqWrapper.isEmpty()) {
                     operationName = operationNameFromReqWrapper;
                 } else {
                     operationName = method.getName();

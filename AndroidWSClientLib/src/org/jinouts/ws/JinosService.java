@@ -5,11 +5,12 @@
  */
 package org.jinouts.ws;
 
-import java.lang.reflect.Proxy;
-import java.net.URL;
-
+import org.jinouts.transport.HttpTransport;
 import org.jinouts.xml.namespace.QName;
 import org.jinouts.xml.ws.WebServiceFeature;
+
+import java.lang.reflect.Proxy;
+import java.net.URL;
 
 /**
  * @author asraf
@@ -19,6 +20,15 @@ public class JinosService {
 
     private URL wsdlLocation;
     private QName serviceName;
+
+    private static volatile HttpTransport sHttpTransport = new HttpTransportImpl();
+
+    public static void registerHttpTransport(HttpTransport httpTransport) {
+        if (httpTransport == null) {
+            throw new IllegalArgumentException();
+        }
+        sHttpTransport = httpTransport;
+    }
 
     public JinosService(URL wsdlLocation, QName serviceName) {
         this.wsdlLocation = wsdlLocation;
@@ -48,10 +58,8 @@ public class JinosService {
     }
 
     public <T> T getPort(ClassLoader cl, Class<T> serviceInterface) {
-        WSInvocationHandler wh = new WSInvocationHandler(this.wsdlLocation, this.serviceName);
-        T proxy = (T) Proxy.newProxyInstance(cl, new Class[]{serviceInterface}, wh);
-
-        return proxy;
+        WSInvocationHandler wh = new WSInvocationHandler(wsdlLocation, serviceName, sHttpTransport);
+        return (T) Proxy.newProxyInstance(cl, new Class[]{serviceInterface}, wh);
     }
 
     public URL getWsdlLocation() {

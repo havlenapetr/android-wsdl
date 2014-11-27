@@ -3,7 +3,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0.html * 
  *
  */
-package org.jinouts.transport;
+package org.jinouts.ws;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
@@ -15,15 +15,13 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.jinouts.transport.HttpTransport;
 
 import java.io.IOException;
 
-public final class HttpTransportUtil {
+class HttpTransportImpl implements HttpTransport {
 
-    private HttpTransportUtil() {
-    }
-
-    public static String sendRequestAndGetRespXML(String soapAction, String reqXMLString, String url) throws IOException {
+    public String sendRequestAndGetRespXML(String soapAction, String reqXMLString, String url) throws IOException {
         HttpPost post = new HttpPost(url);
         StringEntity body = new StringEntity(reqXMLString, HTTP.UTF_8);
         body.setChunked(true);
