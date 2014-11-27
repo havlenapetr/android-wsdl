@@ -5,6 +5,7 @@
  */
 package org.jinouts.ws.util;
 
+import com.eviware.soapui.support.StringUtils;
 import hu.javaforum.commons.ReflectionHelper;
 
 import java.lang.reflect.Array;
@@ -238,7 +239,7 @@ public class XMLUtils {
         StringBuilder sb = new StringBuilder();
 
         // now append the tag
-        sb.append("<").append(tagInitial == null ? "" : (tagInitial + ":")).append(tagName).append(">");
+        sb.append("<").append(StringUtils.isNullOrEmpty(tagInitial) ? "" : (tagInitial + ":")).append(tagName).append(">");
 
         return sb.toString();
     }
@@ -247,7 +248,7 @@ public class XMLUtils {
         StringBuilder sb = new StringBuilder();
 
         sb.append(XMLConstants.TAG_ENDING);
-        sb.append(tagInitial == null ? "" : (tagInitial + ":")).append(tagName).append(">");
+        sb.append(StringUtils.isNullOrEmpty(tagInitial) ? "" : (tagInitial + ":")).append(tagName).append(">");
 
         return sb.toString();
     }
