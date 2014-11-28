@@ -6,10 +6,12 @@ package org.jinouts.ws.util;
 import hu.javaforum.commons.ReflectionHelper;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import org.jinouts.ws.exception.FieldNotMatchedException;
 import org.jinouts.ws.exception.MethodNotMatchedException;
 import org.jinouts.xml.bind.annotation.XmlAnyElement;
+import org.jinouts.xml.bind.annotation.XmlAttribute;
 import org.jinouts.xml.bind.annotation.XmlElement;
 import org.jinouts.xml.bind.annotation.XmlType;
 
@@ -18,6 +20,9 @@ import org.jinouts.xml.bind.annotation.XmlType;
  *         asraf344@gmail.com
  */
 public class XMLReflectionUtil {
+
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+
     public static boolean invokeSetter(Object instance, String fieldName, Object value) {
         boolean isSet = false;
         try {
@@ -126,7 +131,54 @@ public class XMLReflectionUtil {
         return defaultValue;
     }
 
+    public static Map.Entry<String, String> getAttributeForXML(Object object, Field field) {
+        if (!isAttribute(field)) {
+            throw new IllegalArgumentException("Field '" + field.getName() + "' is not attribute type");
+        }
+        XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
+        field.setAccessible(true);
+        try {
+            Object value = field.get(object);
+            if (value == null) {
+                return null;
+            }
+            return new EntryImpl(xmlAttribute.name(), value.toString());
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static boolean isAttribute(Field field) {
+        return field.isAnnotationPresent(XmlAttribute.class);
+    }
+
     private static boolean isValidNamespace(String namespace) {
         return !"##default".equals(namespace);
+    }
+
+    private static final class EntryImpl implements Map.Entry<String, String> {
+
+        private final String key;
+        private final String value;
+
+        public EntryImpl(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String setValue(String s) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

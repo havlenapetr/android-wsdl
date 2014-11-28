@@ -12,9 +12,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -231,17 +233,25 @@ public class XMLUtils {
         return getXMLStartTag(tagName, XMLConstants.SOAP_WS_TAG_INITIAL);
     }
 
-    public static String getXMLEndTag(String tagName) {
-        return getXMLEndTag(tagName, XMLConstants.SOAP_WS_TAG_INITIAL);
+    public static String getXMLStartTag(String tagName, String tagInitial) {
+        return getXMLStartTag(tagName, tagInitial, Collections.EMPTY_MAP);
     }
 
-    public static String getXMLStartTag(String tagName, String tagInitial) {
+    public static String getXMLStartTag(String tagName, String tagInitial, Map<String, String> attributes) {
         StringBuilder sb = new StringBuilder();
 
         // now append the tag
-        sb.append("<").append(StringUtils.isNullOrEmpty(tagInitial) ? "" : (tagInitial + ":")).append(tagName).append(">");
+        sb.append("<").append(StringUtils.isNullOrEmpty(tagInitial) ? "" : (tagInitial + ":")).append(tagName);
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            sb.append(" ").append(entry.getKey()).append("=").append("\"").append(entry.getValue()).append("\"");
+        }
+        sb.append(">");
 
         return sb.toString();
+    }
+
+    public static String getXMLEndTag(String tagName) {
+        return getXMLEndTag(tagName, XMLConstants.SOAP_WS_TAG_INITIAL);
     }
 
     public static String getXMLEndTag(String tagName, String tagInitial) {

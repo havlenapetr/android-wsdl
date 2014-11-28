@@ -15,8 +15,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -37,11 +39,26 @@ public abstract class WSRequestXMLUtils {
         StringBuilder sb = new StringBuilder();
         if (!appendXMLForJavaConvertableObject(sb, valueObj, name, tagInitial, level)) {
             String valueClassName = getValueClassName(valueObj, name);
-            sb.append(XMLUtils.getXMLStartTag(valueClassName,  tagInitial));
+            sb.append(XMLUtils.getXMLStartTag(valueClassName,  tagInitial, getObjectAttributes(valueObj)));
             getXMLForBizObject(sb, valueObj, tagInitial, level);
             sb.append(XMLUtils.getXMLEndTag(valueClassName, tagInitial));
         }
         return sb.toString();
+    }
+
+    private static Map<String, String> getObjectAttributes(Object object) {
+        Map<String, String> attributes = new HashMap<String, String>();
+        for (Field field : getFilteredFields(object)) {
+            if (!XMLReflectionUtil.isAttribute(field)) {
+                continue;
+            }
+            Map.Entry<String, String> entry = XMLReflectionUtil.getAttributeForXML(object, field);
+            if (entry == null) {
+                continue;
+            }
+            attributes.put(entry.getKey(), entry.getValue());
+        }
+        return attributes;
     }
 
     private static String getValueClassName(Object object, String defaultValue) {
@@ -70,6 +87,9 @@ public abstract class WSRequestXMLUtils {
 
     private static void getXMLForBizObject(StringBuilder sb, Object valueObj, String tagInitial, int level) {
         for (Field field : getFilteredFields(valueObj)) {
+            if (XMLReflectionUtil.isAttribute(field)) {
+                continue;
+            }
             field.setAccessible(true);
 
             String fieldName = XMLReflectionUtil.getFieldNameForXML(field);
@@ -130,7 +150,7 @@ public abstract class WSRequestXMLUtils {
     }
 
     private static void getXMLForDate(StringBuilder sb, Date date, String name, String tagInitial, int level) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+        SimpleDateFormat formatter = new SimpleDateFormat(XMLReflectionUtil.DATE_FORMAT, Locale.ENGLISH);
         sb.append(XMLUtils.getXMLStartTag(name, tagInitial));
         // formatter.format((Date)value, sb, 0);
         sb.append(formatter.format(date));
