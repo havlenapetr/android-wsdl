@@ -21,13 +21,19 @@ public class JinosService {
     private URL wsdlLocation;
     private QName serviceName;
 
-    private static volatile HttpTransport sHttpTransport = new HttpTransportImpl();
+    private static volatile HttpTransport sHttpTransport;
 
     public static void registerHttpTransport(HttpTransport httpTransport) {
         if (httpTransport == null) {
             throw new IllegalArgumentException();
         }
+
         sHttpTransport = httpTransport;
+    }
+
+    public static String getHttpTransportDescription() {
+        HttpTransport httpTransport = sHttpTransport;
+        return httpTransport.getDescription();
     }
 
     public JinosService(URL wsdlLocation, QName serviceName) {
@@ -58,8 +64,12 @@ public class JinosService {
     }
 
     public <T> T getPort(ClassLoader cl, Class<T> serviceInterface) {
-        WSInvocationHandler wh = new WSInvocationHandler(wsdlLocation, serviceName, sHttpTransport);
-        return (T) Proxy.newProxyInstance(cl, new Class[]{serviceInterface}, wh);
+        HttpTransport httpTransport = sHttpTransport;
+        if (httpTransport == null) {
+            throw new IllegalStateException("Http transport undefined");
+        }
+        WSInvocationHandler handler = new WSInvocationHandler(wsdlLocation, serviceName, httpTransport);
+        return (T) Proxy.newProxyInstance(cl, new Class[]{serviceInterface}, handler);
     }
 
     public URL getWsdlLocation() {

@@ -3,7 +3,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0.html * 
  *
  */
-package org.jinouts.ws;
+package org.jinouts.transport;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
@@ -15,11 +15,17 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.jinouts.transport.HttpTransport;
+import org.jinouts.ws.JinosService;
 
 import java.io.IOException;
 
 class HttpTransportImpl implements HttpTransport {
+
+    static {
+        JinosService.registerHttpTransport(new HttpTransportImpl());
+    }
+
+    private HttpTransportImpl() {}
 
     public String sendRequestAndGetRespXML(String soapAction, String reqXMLString, String url) throws IOException {
         HttpPost post = new HttpPost(url);
@@ -40,5 +46,10 @@ class HttpTransportImpl implements HttpTransport {
             throw new HttpResponseException(status, "Invalid response");
         }
         return EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
+    }
+
+    @Override
+    public String getDescription() {
+        return "default HttpTransport implementation";
     }
 }
